@@ -14,11 +14,8 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    //@Value("${jwt.secret}")
-    private String secret;
-
-    //@Value("${jwt.expiration}")
-    private Long expiration;
+    private final String secret = "ArnaudSecretKey";
+    private final Long expiration = 86400L;
 
     private Claims extractAllClaims(String token) {
         return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();

@@ -1,17 +1,13 @@
 package arnaud.projects.jwt_auth.service;
 
-import arnaud.projects.jwt_auth.Models.Response;
+import arnaud.projects.jwt_auth.Models.RegistrationResponse;
 import arnaud.projects.jwt_auth.Models.Users;
-import arnaud.projects.jwt_auth.repository.UsersRepository;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.sql.*;
 
@@ -23,42 +19,41 @@ public class UserService {
     final String url = "jdbc:mysql://localhost:3306/jwt_db";
 
     Connection connection = null;
+    private static final Logger Log = LoggerFactory.getLogger(LoginService.class);
 
-
-    private static final Logger Log = LoggerFactory.getLogger(JwtService.class);
-
-    private PasswordEncoder passwordEncoder(){
-        return new BCryptPasswordEncoder();
-    }
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public Object registerUser(Users users) throws SQLException {
 
-        Response response = new Response();
+        RegistrationResponse registrationResponse = new RegistrationResponse();
 
         try (Connection connection = DriverManager.getConnection(url, user, password)) {
             String checkUsername = "SELECT * FROM users WHERE username = ?";
             PreparedStatement stmt = connection.prepareStatement(checkUsername);
             stmt.setString(1, users.getUsername());
             ResultSet resultSet = stmt.executeQuery();
+
             try {
 
                 if (resultSet.next()) {
                     //Response duplicationResponse = new Response();
-                    response.setStatus("DUPLICATION");
-                    response.setUsername("Username already exists");
+                    registrationResponse.setStatus("DUPLICATION");
+                    registrationResponse.setUsername("Username " + users.getUsername() + " exists");
+                    Log.warn("Username " + users.getUsername() + " exists, please use another username");
                 } else {
                     String insertUserQuery = "INSERT INTO users (firstname, lastname, username, password) VALUES (?, ?, ?, ?)";
                     PreparedStatement insertUser = connection.prepareStatement(insertUserQuery);
                     insertUser.setString(1, users.getFirstname());
                     insertUser.setString(2, users.getLastname());
                     insertUser.setString(3, users.getUsername());
-                    insertUser.setString(4, passwordEncoder().encode(users.getPassword()));
+                    insertUser.setString(4, passwordEncoder.encode(users.getPassword()));
                     insertUser.execute();
                     Log.info("User " + users.getUsername() + " created successfully!");
                     //Response successResponse = new Response();
-                    response.setStatus("SUCCESS");
-                    response.setUsername(users.getUsername());
-                    return response;
+                    registrationResponse.setStatus("SUCCESS");
+                    registrationResponse.setUsername(users.getUsername());
+                    return registrationResponse;
 
                 }
 
@@ -73,12 +68,12 @@ public class UserService {
             e.printStackTrace();
             Log.error("Error occurred: " + e.getMessage());
             //Response errorResponse = new Response();
-            response.setStatus("FAILED");
-            response.setUsername("There was an error while registering user");
-            return response;
+            registrationResponse.setStatus("FAILED");
+            registrationResponse.setUsername("There was an error while registering user");
+            return registrationResponse;
         }
 
-        return response;
+        return registrationResponse;
 
 
     }
