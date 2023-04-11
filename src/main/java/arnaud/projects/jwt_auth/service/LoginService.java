@@ -37,7 +37,7 @@ public class LoginService {
         return passwordEncoder.matches(password, storedPassword);
     }
 
-    public Object userLogin(Users user) throws Exception {
+    public Object userLogin(Users user) {
 
         LoginResponse loginResponse = new LoginResponse();
 
@@ -51,22 +51,21 @@ public class LoginService {
                     loginResponse.setMessage("Successful login");
                     LocalDateTime expirationTime = jwtUtil.extractExpiration(token).toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                    loginResponse.setExpiration(expirationTime.format(formatter));
-                    Log.info("User " + user.getUsername() + " successfully logged in, token expires at : " + loginResponse.getExpiration());
-                    return loginResponse;
+//                    loginResponse.setExpiration(expirationTime.format(formatter));
+                    loginResponse.setExpiration("Token expires in 60 minutes");
+                    Log.info("User " + user.getUsername() + " successfully logged in, token expires is valid for 60 minutes");
                 }
                 else {
                     loginResponse.setStatus("FAILED");
                     loginResponse.setMessage("Incorrect password. Please enter the correct password");
                     Log.error("Password entered is incorrect");
-                    return loginResponse;
                 }
             } else  {
                 loginResponse.setStatus("FAILED");
                 loginResponse.setMessage("Username provided does not exist. Please enter a valid username");
                 Log.warn("Username " + user.getUsername() + " does not exist");
-                return loginResponse;
             }
+            return loginResponse;
         } catch (Exception e) {
             Log.error("Error occurred : " + e.getMessage());
             CatchResponse catchResponse = new CatchResponse();
